@@ -30,6 +30,14 @@ def password_encrypt(message, password, iterations):
             b64d(Fernet(key).encrypt(message)),
         )
     )
+
+def password_decrypt(token, password):
+    decoded = b64d(token)
+    salt, iter, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
+    iterations = int.from_bytes(iter, 'big')
+    key = _derive_key(password.encode(), salt, iterations)
+    return Fernet(key).decrypt(token)
+
 def get_lockerfile():
     filename = input("Enter locker file path: ")
     if os.path.exists(filename):
@@ -61,8 +69,15 @@ def main():
         print("Locker file found")
         passphrase = get_passphrase()
         #key = _derive_key(passphrase, 8, 10)
-        
-        
+        # Read in contents of encrypted file
+        with open(filename) as f:
+            encrypted_bytes = f.read().encode()
+
+        print("Encrypted bytes {}".format(encrypted_bytes))
+
+        # Decrypt
+        decrypted_locker = password_decrypt(encrypted_bytes, passphrase)
+        print("Decrypted locker {}".format(decrypted_locker))
     else:
         print("Unable to locate locker file")
         filename = get_lockerfile()
@@ -99,11 +114,6 @@ def main():
 
         print(entry_dict)
 
-        # Now that locker entry is built, write to output file
-        # DEBUG
-        with open(filename + '.json-debug', 'w', encoding='utf-8') as f:
-            json.dump(entry_dict, f, ensure_ascii=False, indent=4)
-
         # Encrypt
         print(passphrase)
         print(type(passphrase))
@@ -117,7 +127,9 @@ def main():
             f.write(encrypted_locker)
             print("[!] Wrote {} encrypted {} to {}".format(len(encrypted_locker), type(encrypted_locker), filename))
             
-        
+        with open(filename + '.json-debug', 'w', encoding='utf-8') as f:
+            json.dump(entry_dict, f, ensure_ascii=False, indent=4)
+            
     elif cleaned_cmd_input == 's':
         print("d")
     else:
