@@ -14,3 +14,34 @@ The locker entries are as follows:
     }
 
 The key is unique, and stores a dictionary of data including email, password and an extra dictionary, that can contain any arbitrary number of entires (think 2FA back-up codes, Q/A challenges, etc).
+
+Usage
+-----
+
+A typical session to retrieve a password would look like this:
+
+    python3 pylocker.py -f pass.txt
+    Locker file found
+    Enter passphrase: ********
+    Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
+    [a]dd entry, [s]how-all, [q]uit or search: s
+    Meta key: ben sgro gmail personal
+    Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
+    [a]dd entry, [s]how-all, [q]uit or search: gmail person
+    Matched on 'ben sgro gmail personal'
+	     email: ben.sgro@gmail.com
+	     password: somepassw0rd
+	     extra: {}
+    Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
+    [a]dd entry, [s]how-all, [q]uit or search: q
+    Shutting down, good-bye!
+
+
+Installation
+------------
+
+Create a virtual environment (if you want). 
+
+    pip install -r requirements.txt
+    python3 pylocker.py -f path/to/locker.txt
+    
