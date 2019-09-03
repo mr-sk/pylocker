@@ -24,7 +24,7 @@ A typical session to retrieve a password would look like this:
     Locker file found
     Enter passphrase: ********
     Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
-    [a]dd entry, [s]how-all, [q]uit or search: s
+    [a]dd entry, [s]how-all, [q]uit or search: sk
     Meta key: mr sk gmail personal
     Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
     [a]dd entry, [s]how-all, [q]uit or search: gmail person
