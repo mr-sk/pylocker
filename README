@@ -1,50 +1,22 @@
-README
+PyLocker
+======
 
-pylocker
+A python based vault that runs interactively, allowing you to decrypt/encrypt a 'locker'.
 
-pylocker -f data.encrypted
+The locker entries are as follows:
 
-[✓] credentials found, encrypted
-Enter pass phrase to decrypt:>
-[✓] decrypted
-[✓] valid json
+    {
+        "ben sgro gmail personal": {
+            "email": "ben.sgro@gmail.com",
+            "password": "n3v3rgu3ss",
+            "extra": {}
+        }
+    }
 
-Search for entry or [A]dd:> A
-...
-Meta: > etrade.com
-Email: > ben.sgro@gmail.com
-Password: > abc123
-Extra 1: >
-...
-etrade.com added
-Search for entry or [A]dd:> etrade
-...
-> Etrade.com
-> Email: ben.sgro@gmail.com
-
-> Etrade.com [S]how [E]dit [M]ain >s
-
-Etrade.com: > ABC123
-
-> Etrade.com [S]how [E]dit [M]ain >
-
-e
-
-> Etrade.com meta: Etrade.com [type or enter to skip]:
-> Etrade.com email: ben.sgro@gmail.com [type or enter to skip]:
-> Etrade.com password: ABC123 [type or enter to skip]:
+The key is unique, and stores a dictionary of data including email, password and an extra dictionary, that can contain any arbitrary number of entires (think 2FA back-up codes, Q/A challenges, etc)
 
 
-json:
-[{
-  "meta": "etrade.com, IRA"
-  "email": "ben.sgro@gmail.com",
-  "password": "abc123"
-  "extra": {
-    "extra 1": ""
-   }
-}, {
-  "meta": "mint.com"
-  "email": "ben.sgro@gmail.com",
-  "password": "abc123"
+
+
+
 }]

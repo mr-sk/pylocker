@@ -1,8 +1,8 @@
 import argparse
 import json
 import os
-import re
 import secrets
+import signal
 import stdiomask
 import sys
 
@@ -65,7 +65,7 @@ def set_passphrase():
 
 def main_menu(filename):
     print("Current locker file '{}'".format(os.path.abspath(filename)))
-    cmd_input = input("[a]dd entry, [s]how-all, [e]xit or search: ")
+    cmd_input = input("[a]dd entry, [s]how-all, [q]uit or search: ")
     cmd_input = cmd_input.lower().strip()
 
     return cmd_input
@@ -152,7 +152,7 @@ def main():
         passphrase = set_passphrase()
 
     cmd_input = False
-    while cmd_input != 'e':
+    while cmd_input != 'q':
         cmd_input = main_menu(filename)
 
         if cmd_input == 'a':
@@ -160,6 +160,8 @@ def main():
 
             # Now write to file, kind of like auto-save.
             write_file(decrypted_locker_dict, passphrase, filename)
+        elif cmd_input == 'e':
+            
 
         elif cmd_input == 's':
             if len(decrypted_locker_dict) == 0:
@@ -168,7 +170,7 @@ def main():
                 for meta_key, meta_dict in decrypted_locker_dict.items():
                     print("Meta key: {}".format(meta_key))
 
-        elif cmd_input == 'e':
+        elif cmd_input == 'q':
             print("Shutting down, good-bye!")
             sys.exit()
 
@@ -188,5 +190,6 @@ def main():
 #
 # Main
 #
+signal.signal(signal.SIGINT, signal_handler)
 main()
 
