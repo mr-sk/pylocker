@@ -8,7 +8,7 @@ The locker entries are as follows:
     {
         "ben sgro gmail personal": {
             "email": "ben.sgro@gmail.com",
-            "password": "n3v3rgu3ss",
+            "password": "somepassw0rd",
             "extra": {}
         }
     }
