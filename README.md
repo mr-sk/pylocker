@@ -6,8 +6,8 @@ A python based vault that runs interactively, allowing you to decrypt/encrypt a 
 The locker entries are as follows:
 
     {
-        "ben sgro gmail personal": {
-            "email": "ben.sgro@gmail.com",
+        "mr sk gmail personal": {
+            "email": "some.email@gmail.com",
             "password": "somepassw0rd",
             "extra": {}
         }
