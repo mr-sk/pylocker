@@ -25,11 +25,11 @@ A typical session to retrieve a password would look like this:
     Enter passphrase: ********
     Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
     [a]dd entry, [s]how-all, [q]uit or search: s
-    Meta key: ben sgro gmail personal
+    Meta key: mr sk gmail personal
     Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
     [a]dd entry, [s]how-all, [q]uit or search: gmail person
-    Matched on 'ben sgro gmail personal'
-	     email: ben.sgro@gmail.com
+    Matched on 'mr sk gmail personal'
+	     email: some.email@gmail.com
 	     password: somepassw0rd
 	     extra: {}
     Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
