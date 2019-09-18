@@ -13,7 +13,7 @@ The locker entries are as follows:
         }
     }
 
-The key is unique, and stores a dictionary of data including email, password and an extra dictionary, that can contain any arbitrary number of entires (think 2FA back-up codes, Q/A challenges, etc).
+The key is unique, and stores a dictionary of data including email, password and an extra dictionary, that can contain any arbitrary number of entries (think 2FA back-up codes, Q/A challenges, etc).
 
 Usage
 -----
