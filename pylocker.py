@@ -5,6 +5,7 @@ import secrets
 import stdiomask
 import sys
 
+from math import log
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
@@ -15,7 +16,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class PyLocker:
     """ PyLocker is a symmetric encryption command line locker for storing passwords to services.
     """
-    def __init__(self):
+    def __init__(self, default_salt_bytes: int = 16, default_iterations: int = 10) -> None:
         """ Simple init, setups the arg parser and preps some member variables """
         cmd_parser = argparse.ArgumentParser(description='Decrypt locker')
         cmd_parser.add_argument('-f', '--file', help='File location to descrypt', required=True)
@@ -23,11 +24,19 @@ class PyLocker:
 
         self.backend = default_backend()
         self.cmd_input = ''
-        self.decrypted_locker_decoded = []
+        self.decrypted_locker_decoded = {}
         self.filename = args['file']
         self.passphrase = None
 
-    def derive_key(self, password: bytes, salt: bytes, iterations: int) -> bytes:
+        if default_salt_bytes < 16:
+            raise RuntimeError('Minimum of 16 bytes for an effective salt')
+        self.default_salt_bytes = default_salt_bytes
+
+        if default_iterations < 10:
+            raise RuntimeError('Minimum of 10 iterations for an effective key derivation')
+        self.default_iterations = default_iterations
+
+    def derive_key(self, salt: bytes, iterations: int) -> bytes:
         """ Also known as key stretching, we compute the key with a salt and
         any number of iterations to generate a derived key. """
         kdf = PBKDF2HMAC(
@@ -36,34 +45,32 @@ class PyLocker:
             salt=salt,
             iterations=iterations,
             backend=self.backend)
-        return b64e(kdf.derive(password))
+        return b64e(kdf.derive(self.passphrase.encode()))
 
-    def password_encrypt(self, message: bytes, password: str, iterations: int) -> bytes:
+    def password_encrypt(self, message: bytes, iterations: int) -> bytes:
         """ Symmetric encryption leveraging Fernet. Use the salt and iterations to encrypt
         the message. """
-        salt = secrets.token_bytes(16)
-        key = self.derive_key(password.encode(), salt, iterations)
-        return b64e(
-            b'%b%b%b' % (
-                salt,
-                iterations.to_bytes(4, 'big'),
-                b64d(Fernet(key).encrypt(message)),
-            )
-        )
+        salt = secrets.token_bytes(self.default_salt_bytes)
+        key = self.derive_key(salt, iterations)
+        return b'~'.join([
+            b64e(salt),
+            b64e(iterations.to_bytes(int(log(iterations, 256)) + 1, 'big')),
+            Fernet(key).encrypt(message)
+        ])
 
-    def password_decrypt(self, token: bytes) -> str:
+    def password_decrypt(self, token: bytes) -> bytes:
         """ Derive the key from the passphrase, then use to decrypt the message. """
-        decoded = b64d(token)
-        salt, iter, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
-        iterations = int.from_bytes(iter, 'big')
-        key = self.derive_key(self.passphrase.encode(), salt, iterations)
+        salt, iterations, token = token.split(b'~')
+        salt = b64d(salt)
+        iterations = int.from_bytes(b64d(iterations), 'big')
 
+        key = self.derive_key(salt, iterations)
         try:
             return Fernet(key).decrypt(token)
         except:
-            return ''
+            return b''
 
-    def get_passphrase(self):
+    def get_passphrase(self) -> None:
         """ Use the stdiomask library to mask the user input (hide the password). """
         self.passphrase = stdiomask.getpass(prompt='Enter passphrase: ', mask='*')
 
@@ -86,107 +93,104 @@ class PyLocker:
                 encrypted_contents = f.read().encode()
 
             decrypted_locker = self.password_decrypt(encrypted_contents)
-            if decrypted_locker is '':
-                print("Invalid token, exiting")
+            if decrypted_locker is b'':
+                print('Invalid token, exiting')
                 sys.exit()
 
             self.decrypted_locker_decoded = json.loads(decrypted_locker.decode('utf-8'))
         else:
-            print("Creating locker file at {}".format(os.path.abspath(self.filename)))
+            print(f'Creating locker file at {os.path.abspath(self.filename)}')
             self.set_passphrase()
             self.write_file()
 
     def write_file(self) -> None:
         """ Write the encrypted locker to the filesystem. """
         locker_encoded = json.dumps(self.decrypted_locker_decoded).encode()
-        encrypted_locker = self.password_encrypt(locker_encoded, self.passphrase, 10)
+        encrypted_locker = self.password_encrypt(locker_encoded, self.default_iterations)
 
         with open(self.filename, 'wb') as f:
             f.write(encrypted_locker)
-            print('Wrote {} encrypted {} to {}'.format(len(encrypted_locker), type(encrypted_locker), self.filename))
+            print(f'Wrote {len(encrypted_locker)} encrypted {type(encrypted_locker).__name__} to {self.filename}')
 
     def main_menu(self) -> None:
         """ Display the main menu and prompt the user for input. """
-        print("Current locker file '{}'".format(os.path.abspath(self.filename)))
+        print(f"Current locker file '{os.path.abspath(self.filename)}'")
         self.cmd_input = input("[a]dd entry, [s]how-all, [q]uit or search: ").lower().strip()
 
-    def add_entry(self) -> None:
+    def add_entry(self) -> bool:
         """ Create the json locker entry """
         entry = {}
         locker_name = input('Locker Name: ')
+
+        if locker_name in self.decrypted_locker_decoded:
+            overwrite = input('Overwrite[Y/N]: ')
+            if overwrite != 'Y':
+                return False
+
         email = input('Email Address: ')
         password = input('Password: ')
 
         extra_entry = {}
-        extra = True
-        extra_count = 1
+        extra_count = 0
 
-        while extra != '':
-            key = 'Extra {}: '.format(extra_count)
-            extra = input(key)
-            extra_entry[key] = extra
+        while True:
             extra_count += 1
-
-        # Dict update after final, empty entry has been added, so remove.
-        del extra_entry[key]
+            key = f'Extra {extra_count}'
+            extra = input(key+': ')
+            if extra != '':
+                extra_entry[key] = extra
+            else:
+                break
 
         entry = {
             locker_name: {
-                "email": email,
-                "password": password,
-                "extra": extra_entry
+                'email': email,
+                'password': password,
+                'extra': extra_entry
             }
         }
 
-        if bool(self.decrypted_locker_decoded) is False:
-            self.decrypted_locker_decoded = entry
-        else:
-            self.decrypted_locker_decoded.update(entry)
+        self.decrypted_locker_decoded.update(entry)
+        return True
 
     def show_all(self) -> None:
         """ Show all the locker entries. """
-        if len(self.decrypted_locker_decoded) == 0:
+        if not len(self.decrypted_locker_decoded):
             print('No items in locker')
-        else:
-            for locker_key, locker in self.decrypted_locker_decoded.items():
-                print("Locker key: '{}'".format(locker_key))
+            return
 
-        return None
+        for locker_key, locker in self.decrypted_locker_decoded.items():
+            print(f"Locker key: '{locker_key}'")
 
     def search(self) -> None:
         """ Search the locker for the input string. When a match is found, show all fields. """
-        if len(self.decrypted_locker_decoded) == 0:
+        if not len(self.decrypted_locker_decoded):
             print('No items in locker')
-            return None
+            return
 
-        match = False
+        matched = False
         for locker_key, locker in self.decrypted_locker_decoded.items():
             if self.cmd_input in locker_key:
-                match = True
-
-            if match:
-                print("Matched on '{}'".format(locker_key))
+                matched = True
+                print(f"Matched on '{locker_key}'")
                 for key, value in locker.items():
-                    print("\t {}: {}".format(key, value))
+                    print(f'\t {key}: {value}')
 
-            match = False
-
-        return None
+        if not matched:
+            print('No locker found')
 
     def act_on_command(self) -> None:
         """ This controls what input we action off of. """
         while self.cmd_input != 'q':
             if self.cmd_input == 'a':
-                self.add_entry()
-                self.write_file()
+                if self.add_entry():
+                    self.write_file()
             elif self.cmd_input == 's':
                 self.show_all()
-            else: # Default action is to search on user input
+            else:
                 self.search()
 
             self.main_menu()
-
-        return None
 
     def run(self) -> None:
         """ The main run loop. """
@@ -195,10 +199,8 @@ class PyLocker:
             self.main_menu()
             self.act_on_command()
         except Exception:
-            print("\n{} failed, shutting down!".format(type(self).__name__))
+            print(f'\n{type(self).__name__} failed, shutting down!')
 
-        return None
-
-# Main
-locker = PyLocker()
-locker.run()
+if __name__ == '__main__':
+    locker = PyLocker()
+    locker.run()
