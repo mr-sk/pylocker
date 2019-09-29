@@ -1,3 +1,5 @@
+""" PyLocker will encrypt and store secrets in a portable file. """
+
 import os
 import sys
 import json
@@ -8,7 +10,7 @@ from math import log
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
 
 import stdiomask
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -68,7 +70,7 @@ class PyLocker:
         key = self.derive_key(salt, iterations)
         try:
             return Fernet(key).decrypt(token)
-        except Exception:
+        except (InvalidToken, TypeError):
             return b''
 
     def get_passphrase(self) -> None:
@@ -198,12 +200,9 @@ class PyLocker:
 
     def run(self) -> None:
         """ The main run loop. """
-        try:
-            self.load_or_create_locker()
-            self.main_menu()
-            self.act_on_command()
-        except Exception:
-            print(f'\n{type(self).__name__} failed, shutting down!')
+        self.load_or_create_locker()
+        self.main_menu()
+        self.act_on_command()
 
 
 if __name__ == '__main__':
