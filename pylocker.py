@@ -67,7 +67,7 @@ class PyLocker:
         key = self.derive_key(salt, iterations)
         try:
             return Fernet(key).decrypt(token)
-        except:
+        except Exception:
             return b''
 
     def get_passphrase(self) -> None:
@@ -200,6 +200,7 @@ class PyLocker:
             self.act_on_command()
         except Exception:
             print(f'\n{type(self).__name__} failed, shutting down!')
+
 
 if __name__ == '__main__':
     locker = PyLocker()
