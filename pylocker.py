@@ -14,8 +14,8 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class PyLocker:
-    """ PyLocker is a symmetric encryption command line locker for storing passwords to services.
-    """
+    """ PyLocker is a symmetric encryption command line locker for storing
+    passwords to services. """
     def __init__(self, default_salt_bytes: int = 16, default_iterations: int = 10) -> None:
         """ Simple init, setups the arg parser and preps some member variables """
         cmd_parser = argparse.ArgumentParser(description='Decrypt locker')
@@ -110,7 +110,9 @@ class PyLocker:
 
         with open(self.filename, 'wb') as f:
             f.write(encrypted_locker)
-            print(f'Wrote {len(encrypted_locker)} encrypted {type(encrypted_locker).__name__} to {self.filename}')
+            print((f'Wrote {len(encrypted_locker)} encrypted '
+                   f'{type(encrypted_locker).__name__} to '
+                   f'{self.filename}'))
 
     def main_menu(self) -> None:
         """ Display the main menu and prompt the user for input. """
@@ -163,7 +165,8 @@ class PyLocker:
             print(f"Locker key: '{locker_key}'")
 
     def search(self) -> None:
-        """ Search the locker for the input string. When a match is found, show all fields. """
+        """ Search the locker for the input string. When a match is found,
+        show all fields. """
         if not len(self.decrypted_locker_decoded):
             print('No items in locker')
             return
