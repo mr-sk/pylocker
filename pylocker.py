@@ -1,12 +1,13 @@
-import argparse
-import json
 import os
-import secrets
-import stdiomask
 import sys
+import json
+import secrets
+import argparse
 
 from math import log
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
+
+import stdiomask
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -89,11 +90,11 @@ class PyLocker:
         if os.path.exists(self.filename) and os.stat(self.filename).st_size != 0:
             self.get_passphrase()
 
-            with open(self.filename) as f:
-                encrypted_contents = f.read().encode()
+            with open(self.filename) as enc_f:
+                encrypted_contents = enc_f.read().encode()
 
             decrypted_locker = self.password_decrypt(encrypted_contents)
-            if decrypted_locker is b'':
+            if not decrypted_locker:
                 print('Invalid token, exiting')
                 sys.exit()
 
@@ -108,8 +109,8 @@ class PyLocker:
         locker_encoded = json.dumps(self.decrypted_locker_decoded).encode()
         encrypted_locker = self.password_encrypt(locker_encoded, self.default_iterations)
 
-        with open(self.filename, 'wb') as f:
-            f.write(encrypted_locker)
+        with open(self.filename, 'wb') as enc_f:
+            enc_f.write(encrypted_locker)
             print((f'Wrote {len(encrypted_locker)} encrypted '
                    f'{type(encrypted_locker).__name__} to '
                    f'{self.filename}'))
@@ -157,26 +158,26 @@ class PyLocker:
 
     def show_all(self) -> None:
         """ Show all the locker entries. """
-        if not len(self.decrypted_locker_decoded):
+        if not self.decrypted_locker_decoded:
             print('No items in locker')
             return
 
-        for locker_key, locker in self.decrypted_locker_decoded.items():
+        for locker_key, _ in self.decrypted_locker_decoded.items():
             print(f"Locker key: '{locker_key}'")
 
     def search(self) -> None:
         """ Search the locker for the input string. When a match is found,
         show all fields. """
-        if not len(self.decrypted_locker_decoded):
+        if not self.decrypted_locker_decoded:
             print('No items in locker')
             return
 
         matched = False
-        for locker_key, locker in self.decrypted_locker_decoded.items():
+        for locker_key, locker_obj in self.decrypted_locker_decoded.items():
             if self.cmd_input in locker_key:
                 matched = True
                 print(f"Matched on '{locker_key}'")
-                for key, value in locker.items():
+                for key, value in locker_obj.items():
                     print(f'\t {key}: {value}')
 
         if not matched:
@@ -206,5 +207,4 @@ class PyLocker:
 
 
 if __name__ == '__main__':
-    locker = PyLocker()
-    locker.run()
+    PyLocker().run()
