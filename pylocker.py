@@ -200,9 +200,12 @@ class PyLocker:
 
     def run(self) -> None:
         """ The main run loop. """
-        self.load_or_create_locker()
-        self.main_menu()
-        self.act_on_command()
+        try:
+            self.load_or_create_locker()
+            self.main_menu()
+            self.act_on_command()
+        except (EOFError, KeyboardInterrupt):
+            print(f'\n{type(self).__name__} input aborted, shutting down!')
 
 
 if __name__ == '__main__':
