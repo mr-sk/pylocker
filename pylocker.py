@@ -20,9 +20,9 @@ class PyLocker:
     """ PyLocker is a symmetric encryption command line locker for storing
     passwords to services. """
     def __init__(self, default_salt_bytes: int = 16, default_iterations: int = 10) -> None:
-        """ Simple init, setups the arg parser and preps some member variables """
+        """ Simple init, setup the arg parser and preps some member variables """
         cmd_parser = argparse.ArgumentParser(description='Decrypt locker')
-        cmd_parser.add_argument('-f', '--file', help='File location to descrypt', required=True)
+        cmd_parser.add_argument('-f', '--file', help='File location to decrypt', required=True)
         args = vars(cmd_parser.parse_args())
 
         self.backend = default_backend()
@@ -125,11 +125,20 @@ class PyLocker:
     def add_entry(self) -> bool:
         """ Create the json locker entry """
         entry = {}
+        match_count = 0
         locker_name = input('Locker Name: ')
 
         if locker_name in self.decrypted_locker_decoded:
-            overwrite = input('Overwrite[Y/N]: ')
-            if overwrite != 'Y':
+            overwrite = input('Locker key exists; [o]verwrite, [i]ncrement: ').lower().strip()
+            if overwrite == 'o':
+                pass
+            elif overwrite == 'i':
+                for locker_key, locker in self.decrypted_locker_decoded.items():
+                    if locker_name == locker_key:
+                        match_count += 1
+                if match_count > 0:
+                    locker_name = "{} {}".format(locker_name, match_count)
+            else:
                 return False
 
         email = input('Email Address: ')
