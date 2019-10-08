@@ -20,12 +20,8 @@ Usage
 
 A typical session to retrieve a password would look like this:
 
-    python3 pylocker.py -f pass.txt
-    Locker file found
+    $ python3 pylocker.py -f pass.txt
     Enter passphrase: ********
-    Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
-    [a]dd entry, [s]how-all, [q]uit or search: sk
-    Meta key: mr sk gmail personal
     Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
     [a]dd entry, [s]how-all, [q]uit or search: gmail person
     Matched on 'mr sk gmail personal'
@@ -34,14 +30,12 @@ A typical session to retrieve a password would look like this:
 	     extra: {}
     Current locker file '/Users/bsgro/Research/pylocker/pass.txt'
     [a]dd entry, [s]how-all, [q]uit or search: q
-    Shutting down, good-bye!
-
 
 Installation
 ------------
 
-Create a virtual environment (if you want). 
+Create a virtual environment (if you want).
 
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     python3 pylocker.py -f path/to/locker.txt
-    
+
