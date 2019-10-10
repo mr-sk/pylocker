@@ -18,7 +18,20 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 class PyLocker:
     """ PyLocker is a symmetric encryption command line locker for storing
-    passwords to services. """
+    passwords to services.
+
+    Symmetric-key algorithms use the same key for encryption and decryption. This is different
+    from asymmetric key encryption, which creates two keys, a public and a private key.
+
+    PyLocker uses Fernet, which is a symmetric encryption module for Python.
+
+    When the user enters a password for the locker, we use PBKDF2 which is "Password-Based Key
+    Derivation Function 2" which applies a pseudorandom function, in this case HMAC (hash-based
+    message authentication code), to the passphrase (along with salt) that repeats the HMAC
+    many times to create a derived key (also known as key stretching), that can be used as the
+    cryptographic key in the symmetric encryption operation.
+
+    """
     def __init__(self, default_salt_bytes: int = 16, default_iterations: int = 10) -> None:
         """ Simple init, setup the arg parser and preps some member variables """
         cmd_parser = argparse.ArgumentParser(description='Decrypt locker')
