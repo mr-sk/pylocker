@@ -8,6 +8,7 @@ import argparse
 
 from math import log
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
+from typing import Optional, Dict, Collection, Union
 
 import stdiomask
 from cryptography.fernet import Fernet, InvalidToken
@@ -40,9 +41,8 @@ class PyLocker:
 
         self.backend = default_backend()
         self.cmd_input = ''
-        self.decrypted_locker_decoded = {}
+        self.decrypted_locker_decoded : Dict[str, Dict[str, Union[str, Collection[str]]]] = {}
         self.filename = args['file']
-        self.passphrase = None
 
         if default_salt_bytes < 16:
             raise RuntimeError('Minimum of 16 bytes for an effective salt')
@@ -51,6 +51,8 @@ class PyLocker:
         if default_iterations < 10:
             raise RuntimeError('Minimum of 10 iterations for an effective key derivation')
         self.default_iterations = default_iterations
+
+        self.load_or_create_locker()
 
     def derive_key(self, salt: bytes, iterations: int) -> bytes:
         """ Also known as key stretching, we compute the key with a salt and
@@ -74,17 +76,17 @@ class PyLocker:
             Fernet(key).encrypt(message)
         ])
 
-    def password_decrypt(self, token: bytes) -> bytes:
+    def password_decrypt(self, token: bytes) -> Optional[bytes]:
         """ Derive the key from the passphrase, then use to decrypt the message. """
-        salt, iterations, token = token.split(b'~')
+        salt, iterations_b, token = token.split(b'~')
         salt = b64d(salt)
-        iterations = int.from_bytes(b64d(iterations), 'big')
+        iterations = int.from_bytes(b64d(iterations_b), 'big')
 
         key = self.derive_key(salt, iterations)
         try:
             return Fernet(key).decrypt(token)
         except (InvalidToken, TypeError):
-            return b''
+            return None
 
     def get_passphrase(self) -> None:
         """ Use the stdiomask library to mask the user input (hide the password). """
@@ -97,7 +99,7 @@ class PyLocker:
 
         if self.passphrase != confirmed_passphrase:
             print('Passphrases do not match')
-            self.get_passphrase()
+            sys.exit()
 
     def load_or_create_locker(self) -> None:
         """ If the locker file exists, read the contents and decrypt into memory.
@@ -137,7 +139,6 @@ class PyLocker:
 
     def add_entry(self) -> bool:
         """ Create the json locker entry """
-        entry = {}
         match_count = 0
         locker_name = input('Locker Name: ')
 
@@ -225,7 +226,6 @@ class PyLocker:
     def run(self) -> None:
         """ The main run loop. """
         try:
-            self.load_or_create_locker()
             self.main_menu()
             self.act_on_command()
         except (EOFError, KeyboardInterrupt):
