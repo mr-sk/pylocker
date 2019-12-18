@@ -133,7 +133,7 @@ class PyLocker:
     def main_menu(self) -> None:
         """ Display the main menu and prompt the user for input. """
         print(f"Current locker file '{os.path.abspath(self.filename)}'")
-        self.cmd_input = input("[a]dd entry, [s]how-all, [q]uit or search: ").lower().strip()
+        self.cmd_input = input("[a]dd entry, [s]how-all, [q]uit, [c]lear or search: ").lower().strip()
 
     def add_entry(self) -> bool:
         """ Create the json locker entry """
@@ -215,6 +215,8 @@ class PyLocker:
                     self.write_file()
             elif self.cmd_input == 's':
                 self.show_all()
+            elif self.cmd_input == 'c':
+                os.system('cls' if os.name == 'nt' else 'clear')
             else:
                 self.search()
 
